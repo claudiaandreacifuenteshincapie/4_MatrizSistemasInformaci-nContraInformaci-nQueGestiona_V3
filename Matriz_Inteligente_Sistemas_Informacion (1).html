@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matriz Inteligente de Sistemas de Información</title>
+<style>
+:root{
+  --blue:#1769aa; --blue2:#0b4f8a; --cyan:#0ea5a8; --green:#159947;
+  --yellow:#d99b00; --orange:#e87500; --red:#c93636; --purple:#7357c9;
+  --bg:#f4f7fb; --card:#ffffff; --text:#233044; --muted:#6c7a8d;
+  --border:#dfe6ee; --shadow:0 8px 24px rgba(24,54,88,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#0e3557;color:white;padding:22px 16px;position:fixed;top:0;bottom:0;left:0}
+.brand{display:flex;gap:11px;align-items:center;padding:8px 8px 24px;border-bottom:1px solid rgba(255,255,255,.14)}
+.brandIcon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#1e90d6,#6b5ce7);display:grid;place-items:center;font-size:20px}
+.brand h1{font-size:15px;margin:0;line-height:1.25}.brand span{font-size:11px;color:#bcd1e5}
+.nav{margin-top:22px}.nav button{width:100%;border:0;background:transparent;color:#d9e7f4;text-align:left;padding:12px;border-radius:10px;margin:3px 0}
+.nav button:hover,.nav button.active{background:rgba(255,255,255,.12);color:#fff}
+.nav small{display:block;color:#8fb0ca;text-transform:uppercase;font-size:10px;letter-spacing:1px;margin:20px 10px 8px}
+.main{margin-left:245px;width:calc(100% - 245px);padding:22px 28px 40px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px}
+.title h2{margin:0;font-size:25px}.title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:9px;padding:9px 13px;font-weight:600}
+.btn:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.ghost{background:transparent}
+.dashboard{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:15px;box-shadow:var(--shadow)}
+.kpi .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kpi .num{font-size:26px;font-weight:800;margin-top:6px}.kpi .sub{font-size:11px;color:var(--muted);margin-top:3px}
+.kpi.blue .num{color:var(--blue)}.kpi.green .num{color:var(--green)}.kpi.orange .num{color:var(--orange)}.kpi.red .num{color:var(--red)}.kpi.purple .num{color:var(--purple)}.kpi.cyan .num{color:var(--cyan)}
+.panel{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.filters{display:grid;grid-template-columns:2fr 1.4fr 1fr 1fr 1fr 1fr auto;gap:9px;align-items:end}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:1px solid #ccd7e3;border-radius:8px;padding:9px 10px;background:#fff;color:var(--text)}
+.field textarea{min-height:105px;resize:vertical}
+.section-title{font-size:13px;font-weight:800;margin:0 0 12px}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
+table{width:100%;border-collapse:collapse;min-width:1100px}
+th{background:#f2f6fa;color:#53657a;font-size:11px;text-transform:uppercase;letter-spacing:.35px;text-align:left;padding:11px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+td{padding:11px;border-bottom:1px solid #edf1f5;font-size:12px;vertical-align:top}
+tr:hover td{background:#fbfdff}
+.id{font-weight:800;color:var(--blue)}
+.clamp{max-width:330px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.badge.high{background:#fde8e8;color:#a52424}.badge.med{background:#fff4d8;color:#8a6200}.badge.low{background:#e7f7ec;color:#16743b}.badge.na{background:#eef2f6;color:#657384}
+.badge.blue{background:#e6f1fb;color:#14588e}.badge.green{background:#e6f7ec;color:#15723a}.badge.orange{background:#fff0df;color:#a85200}.badge.purple{background:#eee9ff;color:#6247b7}
+.action-cell{max-width:220px}
+.iconbtn{border:1px solid var(--border);background:#fff;border-radius:7px;padding:6px 8px;margin-right:4px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(10,30,50,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal.open{display:flex}
+.modal-card{background:#fff;width:min(900px,100%);max-height:92vh;overflow:auto;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.25)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:2}
+.modal-head h3{margin:0}.close{border:0;background:#eef2f6;width:34px;height:34px;border-radius:9px}
+.modal-body{padding:20px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.full{grid-column:1/-1}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff}
+.checkbox{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:8px}
+.checkbox input{width:auto}
+.toast{position:fixed;right:22px;bottom:22px;background:#123b5d;color:white;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:50;font-size:13px}
+.toast.show{display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:10px}
+.legend span{display:flex;align-items:center;gap:5px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.bar-row{display:grid;grid-template-columns:220px 1fr 35px;gap:8px;align-items:center;margin:8px 0;font-size:11px}
+.bar{height:9px;background:#e9eef4;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#4c9bd4);border-radius:8px}
+.note{font-size:11px;color:var(--muted);background:#f6f9fc;border-left:3px solid var(--blue);padding:10px;border-radius:7px;margin-bottom:12px}
+@media(max-width:1200px){.dashboard{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.sidebar{width:70px;padding:15px 8px}.brand h1,.brand span,.nav span,.nav small{display:none}.main{margin-left:70px;width:calc(100% - 70px);padding:16px}.brand{justify-content:center;border:0}.dashboard{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.topbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brandIcon">▦</div>
+    <div><h1>Matriz Inteligente</h1><span>Sistemas de Información</span></div>
+  </div>
+  <div class="nav">
+    <small>Gestión</small>
+    <button class="active" onclick="showSection('inicio',this)">🏠 <span>Inicio</span></button>
+    <button onclick="showSection('matriz',this)">📋 <span>Matriz de necesidades</span></button>
+    <button onclick="openModal()">➕ <span>Nueva necesidad</span></button>
+    <button onclick="showSection('indicadores',this)">📊 <span>Indicadores</span></button>
+    <small>Datos</small>
+    <button onclick="exportCSV()">⬇️ <span>Exportar CSV</span></button>
+    <button onclick="document.getElementById('fileInput').click()">⬆️ <span>Importar CSV</span></button>
+  </div>
+  <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="importCSV(event)">
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="title">
+      <h2 id="pageTitle">Panel de control</h2>
+      <p>Gestión, priorización y seguimiento de necesidades de sistemas de información.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn primary" onclick="openModal()">＋ Nueva necesidad</button>
+    </div>
+  </div>
+
+  <section id="inicio">
+    <div class="dashboard">
+      <div class="kpi blue"><div class="label">Total necesidades</div><div class="num" id="kTotal">0</div><div class="sub">Registros activos</div></div>
+      <div class="kpi green"><div class="label">Priorizadas</div><div class="num" id="kPriority">0</div><div class="sub">Marcadas con prioridad</div></div>
+      <div class="kpi orange"><div class="label">En desarrollo</div><div class="num" id="kDev">0</div><div class="sub">Según acción / estado</div></div>
+      <div class="kpi red"><div class="label">Cerradas</div><div class="num" id="kClosed">0</div><div class="sub">Solicitud cerrada</div></div>
+      <div class="kpi purple"><div class="label">Direcciones</div><div class="num" id="kDirs">0</div><div class="sub">Dependencias registradas</div></div>
+      <div class="kpi cyan"><div class="label">Pendientes</div><div class="num" id="kPending">0</div><div class="sub">Sin estado definido</div></div>
+    </div>
+    <div class="panel">
+      <div class="section-title">Acceso rápido</div>
+      <div class="actions">
+        <button class="btn primary" onclick="openModal()">＋ Registrar necesidad</button>
+        <button class="btn" onclick="showSection('matriz',document.querySelectorAll('.nav button')[1])">🔎 Consultar matriz</button>
+        <button class="btn" onclick="showSection('indicadores',document.querySelectorAll('.nav button')[3])">📈 Ver indicadores</button>
+      </div>
+      <div class="note" style="margin-top:14px">Los registros se guardan automáticamente en este navegador. Puedes exportarlos para compartir o respaldar la información.</div>
+      <div class="legend">
+        <span><i class="dot" style="background:#c93636"></i> Alta / crítica</span>
+        <span><i class="dot" style="background:#d99b00"></i> Media / pendiente</span>
+        <span><i class="dot" style="background:#159947"></i> Baja / gestionada</span>
+        <span><i class="dot" style="background:#7357c9"></i> Análisis / priorización</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="matriz" style="display:none">
+    <div class="panel">
+      <div class="section-title">Buscar y filtrar información</div>
+      <div class="filters">
+        <div class="field"><label>Buscar</label><input id="search" placeholder="Sistema, necesidad, responsable..." oninput="renderTable()"></div>
+        <div class="field"><label>Dirección</label><select id="fDir" onchange="renderTable()"><option value="">Todas</option></select></div>
+        <div class="field"><label>Prioridad</label><select id="fPriority" onchange="renderTable()"><option value="">Todas</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option><option value="na">Sin definir</option></select></div>
+        <div class="field"><label>Estado</label><select id="fState" onchange="renderTable()"><option value="">Todos</option></select></div>
+        <div class="field"><label>Acción</label><select id="fAction" onchange="renderTable()"><option value="">Todas</option></select></div>
+        <div class="field"><label>Etapa</label><select id="fStage" onchange="renderTable()"><option value="">Todas</option></select></div>
+        <button class="btn" onclick="clearFilters()">Limpiar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section-title">Matriz de necesidades <span id="resultCount" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Dirección</th><th>Información / sistema</th><th>Necesidad</th>
+            <th>Prioridad</th><th>Acción</th><th>Apoya</th><th>Estado</th><th>Etapa</th><th>Actualización</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="indicadores" style="display:none">
+    <div class="panel">
+      <div class="section-title">Indicadores ejecutivos</div>
+      <div class="charts">
+        <div><div class="section-title">Necesidades por Dirección</div><div id="dirChart"></div></div>
+        <div><div class="section-title">Necesidades priorizadas</div><div id="priorityChart"></div></div>
+        <div><div class="section-title">Distribución por acción</div><div id="actionChart"></div></div>
+        <div><div class="section-title">Distribución por etapa / estado</div><div id="stageChart"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="modal" id="modal">
+ <div class="modal-card">
+  <div class="modal-head"><h3 id="modalTitle">Nueva necesidad</h3><button class="close" onclick="closeModal()">✕</button></div>
+  <form id="recordForm" onsubmit="saveRecord(event)">
+   <div class="modal-body">
+    <div class="note">Completa los campos principales. Los catálogos evitan errores de digitación y permiten filtrar posteriormente la matriz.</div>
+    <div class="form-grid">
+      <div class="field"><label>Dirección / Subsecretaría *</label><input id="direccion" required></div>
+      <div class="field"><label>Información / sistema *</label><input id="informacion" required></div>
+      <div class="field full"><label>Necesidad *</label><textarea id="necesidad" required placeholder="Describe de forma clara qué se requiere y para qué proceso."></textarea></div>
+      <div class="field"><label>Prioridad</label><select id="prioridad"><option value="false">Sin definir</option><option value="true">Priorizada</option></select></div>
+      <div class="field"><label>Nivel de prioridad</label><select id="nivel"><option value="">Sin definir</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+      <div class="field"><label>Acción</label><select id="accion"></select></div>
+      <div class="field"><label>Responsable / Apoya</label><input id="apoya"></div>
+      <div class="field"><label>Estado</label><select id="estado"></select></div>
+      <div class="field"><label>Etapa</label><select id="etapa"></select></div>
+      <div class="field"><label>Fecha de registro</label><input id="fechaRegistro" type="date"></div>
+      <div class="field"><label>Fecha de actualización</label><input id="fechaActualizacion" type="date"></div>
+      <div class="field full"><label>Observaciones / seguimiento</label><textarea id="observaciones" placeholder="Acuerdos, decisiones, dependencias, próximos pasos..."></textarea></div>
+    </div>
+   </div>
+   <div class="modal-foot"><button type="button" class="btn" onclick="closeModal()">Cancelar</button><button type="submit" class="btn primary">Guardar registro</button></div>
+  </form>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const originalData = [{"id": 1, "direccion": "Dirección Administrativa y Financiera - Salud", "informacion": "Liquidaciones de nómina, desde el aplicativo", "necesidad": "El sistema no genera directamente las liquidaciones definitivas de los empleados. se han efectuado mesas de trabajo para tocar el tema", "priorizada": false, "accion": "Migrar", "apoya": "N/A", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 2, "direccion": "Dirección Administrativa y Financiera - Salud", "informacion": "Cuotas partes", "necesidad": "En xenco se trabaja la liquidación de cuotas partes pensionales por cobrar desde el modulo de cartera y a la vez se está estableciendo la conveniencia tecnica y economica de implementar otro software que se trabaja desde la secretaria de talento humano llamado sis cuotas liquidador de cuotas partes pensionales", "priorizada": false, "accion": "Migrar", "apoya": "N/A", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 3, "direccion": "Dirección Administrativa y Financiera - Salud", "informacion": "Archivo documental SSSA\n(Digitalizacion)", "necesidad": "Crear funcionalidades para  consultar de forma sistematica la información fisica con que se cuenta (Historias laborales activas, retirados, jubilados, jubilados fallecidos)", "priorizada": false, "accion": "Contratar Solucion Existente", "apoya": "N/A", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 4, "direccion": "Dirección Administrativa y Financiera - Salud", "informacion": "Articular SIHO con tablero de control gerencial para toma de decisiones", "necesidad": "Incluir los diferentes componentes de los módulos del SIHO al tablero de control gerencial del Departamento, aprovechando la información disponible en el proceso de toma de decisiones", "priorizada": false, "accion": "Solicitud Cerrada. \nNo fue aclarada por el solicitante", "apoya": "N/A", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 5, "direccion": "Dirección de Asuntos Legales", "informacion": "Registro y seguimiento de los procesos de contratación", "necesidad": "Crear funcionalidades para registrar y verificar el estado actual de los procesos de contratación", "priorizada": false, "accion": "Solicitud  Cerrada.\nPorque este tema fue descartado por la direccion de Asuntos Legales", "apoya": "Claudia Cifuentes", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 6, "direccion": "Dirección de Asuntos Legales", "informacion": "Registro y generación certificados de existencia y representación personerías jurídicas y ESAL sector salud ", "necesidad": "Crear funcionalidaddes para recepcionar las solicitudes para el reconocimiento de la personería juridica, modificaciones estatatuarios, actualizaciones organos sociales, entre otras", "priorizada": false, "accion": "Solicitud Cerrada.\nPorque este tema lo van a seguir gestionando manualmente. Decision de la Direccion de Asuntos Legales", "apoya": "Claudia Cifuentes", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 7, "direccion": "Dirección Aseguramiento y Prestación de Servicios de Salud", "informacion": "AseguramientoEnSalud-SeguimientoAlaAfiliacionDelSGSSS", "necesidad": "Crear funcionalidaddes para registrar, importar, validar, modificar, consolidar y generar la información correspondiente a los archivos dispuestos en el SFTP-BDUA y SFTP-LMA-RUAF (Nacimientos y Defunciones), sisben del departamento de Antioquia, otras fuentes de información del régimen contributivo. Efecturar los respectivos cruces de bases de datos entre estos archivos y otras bases que permitan la inspección, vigilancia y control para las funciones y competencias del departamento", "priorizada": true, "accion": "Desarrollar SSSA/Contratar\nProxima etapa", "apoya": "Juan", "observaciones": "Etapa 2", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 8, "direccion": "Dirección Aseguramiento y Prestación de Servicios de Salud", "informacion": "Aseguramiento en Salud - Web - Inspección y Vigilancia de Aseguramiento en Salud", "necesidad": "Crear funcionalidaddes para registrar, cargar y gestionar la documentación (instrumentos físicos de recolección), requeridos en el proceso de las visitas de inspección y vigilancia al aseguramiento en salud a las Secretarías Locales de Salud y las EAPB que hacen presencia en el departamento de Antioquia", "priorizada": true, "accion": "Desarrollar SSSA/Contratar", "apoya": "Juan", "observaciones": "Etapa 1", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 9, "direccion": "Dirección Calidad y Redes de Servicios de Salud", "informacion": "Validador PSFF", "necesidad": "Crear funcionalidaddes para validar la consistencia de la informacion historica registrada por las ESES en la plataforma SIHO (Produccion, ingresos, costos, gastos, facturacion, etc) que permita ademas valorar la razonabilidad y consistencia de las proyecciones conforme a las tendencias de las diferentes variables presentadas en el escenario financiero propuesto por las ESES en el marco del programa", "priorizada": true, "accion": "Solicitud Cerrada:\nLa Lider Funcional no dio respuesta para continuar construyendo la documentacion", "apoya": "Patricia", "observaciones": "Etapa 2", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 10, "direccion": "Dirección Calidad y Redes de Servicios de Salud", "informacion": "Gestion Inventarios ESES", "necesidad": "Crear funcionalidaddes para cargue masivo de informacion de los inventarios (cada uno proveniente de un archivo generado por el software que utiliza la ESE", "priorizada": true, "accion": "Desarrollar SSSA - Practicantes", "apoya": "Claudia Cifuentes", "observaciones": "Practicantes Excelencia", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 11, "direccion": "Dirección Calidad y Redes de Servicios de Salud", "informacion": "Módulo Juntas Directivas ESE", "necesidad": "Crear funcionalidaddes para cargar y consultar información respecto de la conformación y funcionamiento de las juntas directivas", "priorizada": true, "accion": "Desarrollar SSSA/Contratar", "apoya": "Equipo", "observaciones": "Etapa 1", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 12, "direccion": "Dirección Calidad y Redes de Servicios de Salud", "informacion": "Monitoreo y seguimiento de proyectos", "necesidad": "Crear funcionalidades para monitorear y hacer seguimiento a los diferentes proyectos de dotación financiados por la Dirección de Calidad y Redes", "priorizada": false, "accion": "Solicitud Cerrada.\nPorque este tema lo está desarrollando un practicante en Power APPS", "apoya": "Patricia", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 13, "direccion": "Dirección Calidad y Redes de Servicios de Salud", "informacion": "PAMEC", "necesidad": "Crear funcionalidades para reportar y hacer seguimiento de las actividades del PAMEC por parte de los municipios y del departamento de Antioquia", "priorizada": false, "accion": "Solicitud Cerrada:\nLa Lider Funcional no dio respuesta para continuar construyendo la documentacion", "apoya": "Claudia Cifuentes", "observaciones": "Etapa 2", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 14, "direccion": "Dirección Salud Ambiental y Factores de Riesgo", "informacion": "Contratación", "necesidad": "Se requiere un sistema de información de Inspección, vigilancia y control a establecimientos, que permita el proceso sancionatorio y que se integre con el sistema MERCURIO para la radicación y expediente electrónico de establecimientos.", "priorizada": false, "accion": "Contratar Solucion Existente", "apoya": "N/A", "observaciones": "Gestiona Direccion de Salud Ambiental y Factores de Riesgo", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 15, "direccion": "Dirección Salud Ambiental y Factores de Riesgo", "informacion": "Contratación", "necesidad": "Se requiere un sistema de información que administre toda la información relacionada con el proyecto de Zoonosis, con relación a los componentes: \n\nVacunación antirrábica de caninos y felinos: este componente requiere capturar variables como, subregión, municipio, barrio, vereda, corregimiento, lugar del evento, fecha del evento, nombre completo del propietario de la mascota, número de identificación, cantidad de caninos y felinos vacunados, sexo, color, edad, fecha de vencimiento del lote de la vacuna, número de lote de la vacuna, número chip de la mascota, entre otras. Este componente debe permitir el registro de información por los 125 municipios del departamento de Antioquia y se requiere que contemple las funciones básicas de un sistema información como insertar registros, modificar registros y eliminar registros, de acuerdo a los roles de seguridad que se autorice. Este componente debe permitir la importación de los datos (archivo plano, Excel, etc), de aquellos municipios que tienen sus propios sistemas de información o que no requieran usar este. \n\nEsterilización: este componente requiere capturar variables como, subregión, municipio, barrio, vereda, corregimiento, lugar del evento, fecha del evento, nombre completo del propietario de la mascota, número de identificación, cantidad de caninos y felinos esterilizados, sexo, color, edad, número chip de la mascota, entre otras. Este componente debe permitir el registro de información por los 125 municipios del departamento de Antioquia y se requiere que contemple las funciones básicas de un sistema información como insertar registros, modificar registros y eliminar registros, de acuerdo a los roles de seguridad que se autorice. Este componente debe permitir la importación de los datos (archivo plano, Excel, etc), de aquellos municipios que tienen sus propios sistemas de información o que no requieran usar este.\n\nVigilancia actividad: en el sistema requerido se debe implementar los formatos actuales de la vigilancia de la rabia. Este componente debe permitir el registro de información por los 125 municipios del departamento de Antioquia y se requiere que contemple las funciones básicas de un sistema información como insertar registros, modificar registros y eliminar registros, de acuerdo a los roles de seguridad que se autorice. Este componente debe permitir la importación de los datos (archivo plano, Excel, etc.), de aquellos municipios que tienen sus propios sistemas de información o que no requieran usar este.\n", "priorizada": false, "accion": "Contratar Solucion Existente", "apoya": "N/A", "observaciones": "Gestiona Direccion de Salud Ambiental y Factores de Riesgo", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 16, "direccion": "Dirección Salud Ambiental y Factores de Riesgo", "informacion": "Contratación", "necesidad": "Se requiere un sistema de información que administre el movimiento de los medicamentos de las ETV, desde su ingreso al almacén hasta su distribución final al paciente por parte de la Institución prestadora de servicios de salud, con el fin de dar cumplimiento al reporte de información al Ministerio de Salud y Protección Social.", "priorizada": false, "accion": "Contratar Solucion Existente", "apoya": "N/A", "observaciones": "Gestiona Direccion de Salud Ambiental y Factores de Riesgo", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 17, "direccion": "Dirección Salud Colectiva", "informacion": "Programacion Aprobacion Y Seguimiento Asistencias Tecnicas", "necesidad": "Contar con un software que de respuesta a la posibilidad de programar, aprobar y hacer seguimiento a las actividades, eventos, jornadas, brigadas, asesorias y asistencias tecnicas que permita la cronologia ordenada y simultanea, evitando a toda costa la coincidencia inoportuna en los territorios y con los actores locales. Asi tambien que permita hacer seguimiento a las novedades presentadas en dicha programacion, es decir, si la actividad está programada y es necesario aplazarla, reprogramarla y/o cancelarla, se pueda verificar fechas y causas.", "priorizada": false, "accion": "Solicitud Cerrada\n\nPorque este tema lo cubre la plataforma AOAT de la Gobernacion", "apoya": "N/A", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 18, "direccion": "Dirección Salud Colectiva", "informacion": "Sistematizacion Herramientas de Autoevaluacion e indicadores (IAAS-RAM)", "necesidad": "tabular de manera automática los resultados de las autoevaluaciones de control de infecciones, higiene de mano y PROA, provenientes de cada una de las instituciones del departamento", "priorizada": true, "accion": "Desarrollar SSSA/Contratar", "apoya": "Patricia", "observaciones": "Etapa 2", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 19, "direccion": "Dirección Salud Colectiva", "informacion": "sistema para Caracterizacion de los entornos Saludables e identificacion de factores de riesgo y factores protectores para resoluctividad de los indicadores qie lo requieran ", "necesidad": "Desde la estrategia de Atención Primaria en Salud se requiere un sistema de información que permita realizar caracterizaciones de los entornos en todos los municipios y que adicionalmente facilite el anáisis de los indicadores y se determinen los riesgos para mejorar la capacidad de intervención por parte de los diferentes actores del sector salud ", "priorizada": false, "accion": "Contratar Solucion Existente", "apoya": "N/A", "observaciones": "Gestiona Direccion de Salud Colectiva", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 20, "direccion": "Dirección Salud Colectiva", "informacion": "Gestión del Plan de Salud Pública de Intervenciones Colectivas", "necesidad": "registro de sus acciones y cargue de evidencias con respecto al PIC y a la cir 044-2021, esto ademas cómo insumo requerido por las instacias MSPS", "priorizada": false, "accion": "Solicitud Cerrada\n\nPorque este tema fue revisado con los lideres funcionales y decidieron que su necesidad es un repositorio, el cual ya fue revisando con Paola Giraldo", "apoya": "Patricia", "observaciones": "N/A", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 21, "direccion": "Dirección de Calidad y Redes de Servicios", "informacion": "Gestión reportes del programa de Saneamiento Fiscal y Financiero – PSFF del Departamento de Antioquia (Acualmente se tiene aplicacion MAF en herramienta desactualizada e inactiva)", "necesidad": "Generar informes Producción, Flujo e Indicadores (por Hospital, por grupo de Municipios viabilizados (en riesgo fiscal y financiero)) y por Departamento de Instituciones prestadoras de servicios de salud; para apoyar el programa de saneamiento fiscal y financiero. tomando como insumos, la información obtenida de SIHO (Sistema de gestión Hospitalaria) y de CHIP (Consolidador de Hacienda e Información Pública).", "priorizada": true, "accion": "Desarrollar SSSA/Contratar\n(Rediseñar/Migrar)", "apoya": "Patricia", "observaciones": "Etapa 2 (Se une con la solicitud #9)", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 22, "direccion": "Dirección Salud Ambiental y Factores de Riesgo", "informacion": "Residuos Hospitalarios (Hace parte del sistema de información SIINFORMA)", "necesidad": "Registrar y consultar información de los generadores de residuos sólidos hospitalarios y similares del departamento de Antioquia. Para dar respuesta al ministerio, respecto al manejo de estos residuos.", "priorizada": false, "accion": "Desarrollar SSSA/Contratar\n(Rediseñar/Migrar)", "apoya": "Guillermo", "observaciones": "Segun Balbanera Guerra, este modulo será incluido en la nueva plataforma de IVC que se contratará desde Factores de Riesgo:\n\"Sistematizar tramite de Licencia para Prestación de Servicios en Seguridad y Salud en el Trabajo,  este tramite ya no es competencia que lo realice la SSSA, solo la resolución y está lo hace el gestor documental  MERCURIO, fue modificado por la entrada en vigencia de la Resolución 754 de 2021 emitida por el Ministerio Salud y Protección Social. \n\nPara la gestión del trámite el Ministerio de Salud creo un link de acceso (https://lsst.sispro.gov.co/LSST/), donde el peticionario realiza toda la gestión\"", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}, {"id": 23, "direccion": "Dirección Salud Ambiental y Factores de Riesgo", "informacion": "Licencias de Salud Ocupacional (Hace parte del sistema de información SIINFORMA)", "necesidad": "Registrar, validar y generar reportes de la información que ingresa a la SSSA, para el licenciamiento de las personas naturales y jurídicas que ofertan servicios de Salud Ocupacional en el Departamento de Antioquia.", "priorizada": false, "accion": "Desarrollar SSSA/Contratar\n(Rediseñar/Migrar)", "apoya": "Juan", "observaciones": "Segun Balbanera Guerra, este modulo no se debe contratar porque ya existe una plataforma con este proposito en el ministerio de salud, ademas la generacion de las licencias desde la SSSA, se realiza desde Mercurio:\n\"-El Tema Residuos Hospitalarios:  el formulario actual de RHS lo realizo el ingeniero Guillermo Trujillo como un módulo adicional en el sistema SIINFOMRA, desarrollador de la Subsecretaría de Planeación de Atención en Salud desde hace 2 años, no debería contratarse dado a la solución informática funciona para los 125 municipio, sin embargo con el proceso “Realizar la implementación del 100% del formato de las actas de inspección, vigilancia y control sanitario a establecimientos requeridos por la dirección de salud ambiental y factores de riesgo en el módulo \"mercurio creator\" del sistema mercurio con interface en la radicación con el sistema mercurio para la construcción del expediente electrónico por establecimiento”, del cual estamos pendiente de AVAL TECNICO DE TICS, esta contemplado su implementación dado a que se hace IVC a los establecimientos generadores de residuos hospitalarios y similares, por lo tanto el módulo en mención desaparece al entrar este sistema, que es parametrizable en todo lo requerido de este RHS.\"", "estado": "", "etapa": "", "fechaRegistro": "", "fechaActualizacion": ""}];
+let data = JSON.parse(localStorage.getItem("matrizSistemasInfo") || "null") || originalData;
+let editId = null;
+
+const ACTIONS = [
+ "Migrar","Contratar Solución Existente","Solicitud Cerrada","Desarrollar SSSA/Contratar",
+ "Desarrollar SSSA - Practicantes","Desarrollar SSSA/Contratar (Rediseñar/Migrar)",
+ "Desarrollar SSSA","Pendiente de definición"
+];
+const STATES = ["Nueva","En análisis","Priorizada","En documentación","En desarrollo","En contratación","En seguimiento","Pendiente de información","Solicitud cerrada","Descartada","Finalizada"];
+const STAGES = ["Etapa 1","Etapa 2","Próxima etapa","Sin etapa definida","Finalizada"];
+
+function saveLocal(){ localStorage.setItem("matrizSistemasInfo", JSON.stringify(data)); }
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function norm(s){return String(s??"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");}
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
+
+function showSection(id, btn){
+  ["inicio","matriz","indicadores"].forEach(x=>document.getElementById(x).style.display=x===id?"block":"none");
+  document.getElementById("pageTitle").textContent = id==="inicio"?"Panel de control":id==="matriz"?"Matriz de necesidades":"Indicadores ejecutivos";
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(id==="matriz"){populateFilters();renderTable();}
+  if(id==="indicadores") renderCharts();
+  updateKPIs();
+}
+function updateKPIs(){
+  const total=data.length;
+  const pri=data.filter(x=>x.priorizada===true).length;
+  const closed=data.filter(x=>norm(x.accion).includes("cerrad") || norm(x.estado).includes("cerrad")).length;
+  const dev=data.filter(x=>norm(x.accion).includes("desarroll") || norm(x.estado).includes("desarrollo")).length;
+  const pending=data.filter(x=>!x.estado).length;
+  const dirs=new Set(data.map(x=>x.direccion).filter(Boolean)).size;
+  document.getElementById("kTotal").textContent=total;
+  document.getElementById("kPriority").textContent=pri;
+  document.getElementById("kDev").textContent=dev;
+  document.getElementById("kClosed").textContent=closed;
+  document.getElementById("kDirs").textContent=dirs;
+  document.getElementById("kPending").textContent=pending;
+}
+function priorityBadge(x){
+  if(x.priorizada) return '<span class="badge high"><i class="dot" style="background:#c93636"></i>Priorizada</span>';
+  return '<span class="badge na"><i class="dot" style="background:#8795a5"></i>Sin definir</span>';
+}
+function stateBadge(x){
+  if(!x) return '<span class="badge na">Sin estado</span>';
+  const n=norm(x); let c="blue";
+  if(n.includes("cerrad")||n.includes("descart")) c="red";
+  else if(n.includes("desarroll")||n.includes("finaliz")) c="green";
+  else if(n.includes("pend")||n.includes("contrat")) c="orange";
+  else if(n.includes("analisis")||n.includes("prioriz")) c="purple";
+  return `<span class="badge ${c}">${esc(x)}</span>`;
+}
+function populateSelect(id, values, first){
+  const el=document.getElementById(id), current=el.value;
+  el.innerHTML=`<option value="">${first}</option>`+values.sort((a,b)=>a.localeCompare(b)).map(v=>`<option>${esc(v)}</option>`).join("");
+  el.value=current;
+}
+function populateFilters(){
+  populateSelect("fDir",[...new Set(data.map(x=>x.direccion).filter(Boolean))],"Todas");
+  populateSelect("fState",[...new Set(data.map(x=>x.estado).filter(Boolean))],"Todos");
+  populateSelect("fAction",[...new Set(data.map(x=>x.accion).filter(Boolean))],"Todas");
+  populateSelect("fStage",[...new Set(data.map(x=>x.etapa).filter(Boolean))],"Todas");
+}
+function getFiltered(){
+  const q=norm(document.getElementById("search").value), dir=document.getElementById("fDir").value;
+  const pri=document.getElementById("fPriority").value, state=document.getElementById("fState").value;
+  const action=document.getElementById("fAction").value, stage=document.getElementById("fStage").value;
+  return data.filter(x=>{
+    const hay=norm([x.id,x.direccion,x.informacion,x.necesidad,x.accion,x.apoya,x.observaciones,x.estado,x.etapa].join(" "));
+    let p=true;
+    if(q) p=hay.includes(q);
+    if(p&&dir) p=x.direccion===dir;
+    if(p&&pri) p=pri==="na"?!x.priorizada:(x.priorizada && pri==="alta");
+    if(p&&state) p=x.estado===state;
+    if(p&&action) p=x.accion===action;
+    if(p&&stage) p=x.etapa===stage;
+    return p;
+  });
+}
+function renderTable(){
+  const rows=getFiltered(), body=document.getElementById("tableBody");
+  document.getElementById("resultCount").textContent=`(${rows.length} de ${data.length})`;
+  if(!rows.length){body.innerHTML='<tr><td colspan="11" class="empty">No hay registros que coincidan con los filtros.</td></tr>';return;}
+  body.innerHTML=rows.map(x=>`
+    <tr>
+      <td class="id">#${esc(x.id)}</td>
+      <td>${esc(x.direccion)}</td>
+      <td><strong>${esc(x.informacion)}</strong></td>
+      <td><div class="clamp" title="${esc(x.necesidad)}">${esc(x.necesidad)}</div></td>
+      <td>${priorityBadge(x)}</td>
+      <td class="action-cell">${esc(x.accion)}</td>
+      <td>${esc(x.apoya)}</td>
+      <td>${stateBadge(x.estado)}</td>
+      <td>${x.etapa?`<span class="badge purple">${esc(x.etapa)}</span>`:"<span class='badge na'>—</span>"}</td>
+      <td>${esc(x.fechaActualizacion||"—")}</td>
+      <td>
+        <button class="iconbtn" title="Ver / editar" onclick="openModal(${x.id})">✏️</button>
+        <button class="iconbtn" title="Duplicar" onclick="duplicateRecord(${x.id})">📋</button>
+        <button class="iconbtn" title="Eliminar" onclick="deleteRecord(${x.id})">🗑️</button>
+      </td>
+    </tr>`).join("");
+}
+function clearFilters(){
+  ["search","fDir","fPriority","fState","fAction","fStage"].forEach(id=>document.getElementById(id).value="");
+  renderTable();
+}
+function openModal(id=null){
+  editId=id;
+  document.getElementById("modalTitle").textContent=id?"Editar necesidad":"Nueva necesidad";
+  ["accion","estado","etapa"].forEach((key)=>{
+    const el=document.getElementById(key);
+    const vals=key==="accion"?ACTIONS:key==="estado"?STATES:STAGES;
+    el.innerHTML='<option value="">Sin definir</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join("");
+  });
+  const x=id?data.find(r=>r.id===id):null;
+  document.getElementById("direccion").value=x?.direccion||"";
+  document.getElementById("informacion").value=x?.informacion||"";
+  document.getElementById("necesidad").value=x?.necesidad||"";
+  document.getElementById("prioridad").value=x?.priorizada?"true":"false";
+  document.getElementById("nivel").value=x?.nivel||"";
+  document.getElementById("accion").value=x?.accion||"";
+  document.getElementById("apoya").value=x?.apoya||"";
+  document.getElementById("estado").value=x?.estado||"";
+  document.getElementById("etapa").value=x?.etapa||"";
+  document.getElementById("fechaRegistro").value=x?.fechaRegistro||new Date().toISOString().slice(0,10);
+  document.getElementById("fechaActualizacion").value=x?.fechaActualizacion||new Date().toISOString().slice(0,10);
+  document.getElementById("observaciones").value=x?.observaciones||"";
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal(){document.getElementById("modal").classList.remove("open");}
+function saveRecord(e){
+  e.preventDefault();
+  const rec={
+    id:editId || (Math.max(0,...data.map(x=>Number(x.id)||0))+1),
+    direccion:document.getElementById("direccion").value.trim(),
+    informacion:document.getElementById("informacion").value.trim(),
+    necesidad:document.getElementById("necesidad").value.trim(),
+    priorizada:document.getElementById("prioridad").value==="true",
+    nivel:document.getElementById("nivel").value,
+    accion:document.getElementById("accion").value,
+    apoya:document.getElementById("apoya").value.trim(),
+    estado:document.getElementById("estado").value,
+    etapa:document.getElementById("etapa").value,
+    fechaRegistro:document.getElementById("fechaRegistro").value,
+    fechaActualizacion:document.getElementById("fechaActualizacion").value,
+    observaciones:document.getElementById("observaciones").value.trim()
+  };
+  if(editId){data=data.map(x=>x.id===editId?rec:x);showToast("Registro actualizado correctamente");}
+  else {data.push(rec);showToast("Nueva necesidad registrada");}
+  saveLocal();closeModal();updateKPIs();populateFilters();renderTable();
+}
+function duplicateRecord(id){
+  const x=data.find(r=>r.id===id); if(!x)return;
+  const copy={...x,id:Math.max(0,...data.map(r=>Number(r.id)||0))+1,fechaRegistro:new Date().toISOString().slice(0,10),fechaActualizacion:new Date().toISOString().slice(0,10)};
+  data.push(copy);saveLocal();updateKPIs();renderTable();showToast("Registro duplicado");
+}
+function deleteRecord(id){
+  if(!confirm("¿Deseas eliminar este registro? Esta acción no se puede deshacer."))return;
+  data=data.filter(x=>x.id!==id);saveLocal();updateKPIs();populateFilters();renderTable();showToast("Registro eliminado");
+}
+function renderBars(containerId, counts){
+  const el=document.getElementById(containerId), entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(1,...entries.map(e=>e[1]));
+  el.innerHTML=entries.length?entries.map(([k,v])=>`<div class="bar-row"><span title="${esc(k)}">${esc(k.length>35?k.slice(0,35)+"…":k)}</span><div class="bar"><i style="width:${v/max*100}%"></i></div><b>${v}</b></div>`).join(""):'<div class="empty">Sin datos</div>';
+}
+function countBy(fn){return data.reduce((a,x)=>{const k=fn(x)||"Sin definir";a[k]=(a[k]||0)+1;return a},{})}
+function renderCharts(){
+  renderBars("dirChart",countBy(x=>x.direccion));
+  renderBars("priorityChart",{Priorizadas:data.filter(x=>x.priorizada).length,"Sin definir":data.filter(x=>!x.priorizada).length});
+  renderBars("actionChart",countBy(x=>x.accion));
+  renderBars("stageChart",countBy(x=>x.estado||x.etapa));
+}
+function csvCell(v){return '"'+String(v??"").replace(/"/g,'""').replace(/\r?\n/g," ")+'"';}
+function exportCSV(){
+  const headers=["ID","Dirección/Subsecretaría","Información","Necesidad","Priorizada","Nivel prioridad","Acción","Apoya","Estado","Etapa","Fecha registro","Fecha actualización","Observaciones"];
+  const lines=[headers,...data.map(x=>[x.id,x.direccion,x.informacion,x.necesidad,x.priorizada?"Sí":"No",x.nivel,x.accion,x.apoya,x.estado,x.etapa,x.fechaRegistro,x.fechaActualizacion,x.observaciones])].map(r=>r.map(csvCell).join(";"));
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Matriz_Sistemas_Informacion.csv";a.click();URL.revokeObjectURL(a.href);
+  showToast("Archivo CSV exportado");
+}
+function importCSV(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const text=ev.target.result.replace(/^\ufeff/,"");
+    const lines=text.split(/\r?\n/).filter(Boolean);
+    if(lines.length<2){alert("El archivo no contiene registros.");return;}
+    const parseLine=line=>line.split(";").map(s=>s.replace(/^"|"$/g,"").replace(/""/g,'"'));
+    const h=parseLine(lines[0]).map(norm);
+    const idx=(...names)=>{for(const n of names){const i=h.indexOf(norm(n));if(i>=0)return i}return -1};
+    const I={id:idx("id","#"),dir:idx("dirección/subsecretaría","subsecretaria/dirección","dirección"),info:idx("información"),need:idx("necesidad"),pri:idx("priorizada"),nivel:idx("nivel prioridad"),accion:idx("acción"),apoya:idx("apoya"),estado:idx("estado"),etapa:idx("etapa"),fr:idx("fecha registro"),fa:idx("fecha actualización"),obs:idx("observaciones")};
+    const imported=lines.slice(1).map((line,i)=>{const c=parseLine(line);return {
+      id:Number(c[I.id])||Math.max(0,...data.map(x=>Number(x.id)||0))+i+1,direccion:c[I.dir]||"",informacion:c[I.info]||"",necesidad:c[I.need]||"",
+      priorizada:/^(si|sí|1|true)$/i.test(c[I.pri]||""),nivel:c[I.nivel]||"",accion:c[I.accion]||"",apoya:c[I.apoya]||"",
+      estado:c[I.estado]||"",etapa:c[I.etapa]||"",fechaRegistro:c[I.fr]||"",fechaActualizacion:c[I.fa]||"",observaciones:c[I.obs]||""
+    }}).filter(x=>x.direccion||x.informacion||x.necesidad);
+    if(!confirm(`Se encontraron ${imported.length} registros. ¿Reemplazar la matriz actual?`))return;
+    data=imported;saveLocal();updateKPIs();populateFilters();renderTable();showToast("Matriz importada correctamente");
+  };
+  reader.readAsText(file,"UTF-8");e.target.value="";
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  updateKPIs();
+  showSection("inicio",document.querySelector(".nav button"));
+});
+</script>
+</body>
+</html>
