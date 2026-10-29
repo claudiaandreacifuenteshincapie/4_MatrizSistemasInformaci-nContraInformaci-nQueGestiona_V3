@@ -1,0 +1,369 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matriz Inteligente de Sistemas de Información</title>
+<style>
+:root {
+  --azul:#1769aa; --azul-oscuro:#0e3557;
+  --verde:#159947; --amarillo:#d99b00;
+  --rojo:#c93636; --morado:#7357c9;
+  --fondo:#f4f7fb; --borde:#dfe6ee;
+  --texto:#233044; --gris:#6c7a8d;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--fondo);color:var(--texto)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:235px;background:var(--azul-oscuro);color:white;padding:22px 15px;flex-shrink:0}
+.brand{font-size:18px;font-weight:bold;padding:10px;margin-bottom:25px}
+.brand small{display:block;font-size:11px;color:#bcd1e5;margin-top:5px}
+.nav button{display:block;width:100%;padding:12px;margin:4px 0;border:0;border-radius:8px;background:transparent;color:#e1edf7;text-align:left}
+.nav button:hover,.nav button.active{background:#ffffff20}
+.main{padding:25px;width:100%;min-width:0}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:25px;margin:0}
+.subtitle{color:var(--gris);font-size:13px;margin-top:6px}
+.btn{border:1px solid var(--borde);background:white;border-radius:8px;padding:10px 13px;font-weight:600;color:var(--texto)}
+.btn.primary{background:var(--azul);color:white;border-color:var(--azul)}
+.btn:hover{filter:brightness(.96)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:13px;margin-bottom:18px}
+.card,.panel{background:white;border:1px solid var(--borde);border-radius:13px;padding:17px;margin-bottom:16px}
+.card{margin:0;box-shadow:0 5px 18px #173b5b0b}
+.card label{font-size:11px;color:var(--gris);font-weight:bold;text-transform:uppercase}
+.card strong{display:block;font-size:27px;margin-top:8px;color:var(--azul)}
+.panel h2{font-size:15px;margin:0 0 15px}
+.filters,.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.field label{display:block;font-size:12px;color:var(--gris);font-weight:700;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #ccd7e3;border-radius:8px;background:white;color:var(--texto)}
+.field textarea{min-height:100px;resize:vertical}
+.full{grid-column:1/-1}
+.tablewrap{overflow:auto;border:1px solid var(--borde);border-radius:9px}
+table{width:100%;border-collapse:collapse;min-width:1000px}
+th{background:#f0f5fa;color:#53657a;text-align:left;font-size:11px;padding:12px;text-transform:uppercase}
+td{padding:11px;border-top:1px solid #edf1f5;font-size:12px;vertical-align:top}
+tr:hover td{background:#f9fbfd}
+.tag{display:inline-block;padding:5px 8px;border-radius:15px;font-size:10px;font-weight:bold;white-space:nowrap}
+.tag.green{background:#e5f7eb;color:#16743b}
+.tag.yellow{background:#fff4d8;color:#8a6200}
+.tag.red{background:#fde8e8;color:#a52424}
+.tag.blue{background:#e6f1fb;color:#14588e}
+.tag.purple{background:#eee9ff;color:#6247b7}
+.tag.gray{background:#eef2f6;color:#657384}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.smallbtn{padding:5px 7px;border:1px solid var(--borde);background:white;border-radius:6px}
+.modal{display:none;position:fixed;inset:0;background:#0a1e3277;z-index:10;align-items:center;justify-content:center;padding:15px}
+.modal.open{display:flex}
+.modalbox{background:white;width:min(850px,100%);max-height:95vh;overflow:auto;border-radius:14px}
+.modalhead,.modalfoot{padding:17px 20px;border-bottom:1px solid var(--borde)}
+.modalhead{display:flex;justify-content:space-between;align-items:center}
+.modalhead h2{font-size:18px;margin:0}
+.modalbody{padding:20px}
+.modalfoot{border-top:1px solid var(--borde);border-bottom:0;display:flex;justify-content:flex-end;gap:8px}
+.notice{background:#eef6fc;padding:12px;border-left:3px solid var(--azul);font-size:12px;margin-bottom:15px}
+.chartrow{display:grid;grid-template-columns:minmax(100px,220px) 1fr 30px;gap:10px;align-items:center;margin:12px 0;font-size:12px}
+.bar{height:9px;background:#e8edf3;border-radius:10px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--azul)}
+.hidden{display:none!important}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.filters,.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{width:190px}}
+@media(max-width:650px){.app{display:block}.sidebar{width:100%;padding:10px}.brand{margin:0}.nav{display:flex;overflow:auto}.nav button{min-width:max-content;width:auto}.main{padding:13px}.filters,.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">▦ Matriz Inteligente
+    <small>Sistemas de Información</small>
+  </div>
+  <nav class="nav">
+    <button class="active" onclick="pagina('inicio',this)">🏠 Inicio</button>
+    <button onclick="pagina('matriz',this)">📋 Matriz de necesidades</button>
+    <button onclick="nuevo()">➕ Nueva necesidad</button>
+    <button onclick="pagina('indicadores',this)">📊 Indicadores</button>
+    <button onclick="exportar()">⬇️ Exportar CSV</button>
+    <button onclick="document.getElementById('archivo').click()">⬆️ Importar CSV</button>
+  </nav>
+  <input type="file" id="archivo" accept=".csv" hidden onchange="importar(event)">
+</aside>
+
+<main class="main">
+<header>
+  <div>
+    <h1 id="titulo">Panel de control</h1>
+    <div class="subtitle">Gestión, priorización y seguimiento de necesidades.</div>
+  </div>
+  <button class="btn primary" onclick="nuevo()">＋ Nueva necesidad</button>
+</header>
+
+<section id="inicio">
+  <div class="cards">
+    <div class="card"><label>Total necesidades</label><strong id="total">0</strong></div>
+    <div class="card"><label>Priorizadas</label><strong id="priorizadas">0</strong></div>
+    <div class="card"><label>En desarrollo</label><strong id="desarrollo">0</strong></div>
+    <div class="card"><label>Sin estado</label><strong id="pendientes">0</strong></div>
+  </div>
+  <div class="panel">
+    <h2>Acceso rápido</h2>
+    <div class="actions">
+      <button class="btn primary" onclick="nuevo()">＋ Registrar necesidad</button>
+      <button class="btn" onclick="pagina('matriz',document.querySelectorAll('.nav button')[1])">🔎 Consultar matriz</button>
+      <button class="btn" onclick="pagina('indicadores',document.querySelectorAll('.nav button')[3])">📈 Ver indicadores</button>
+    </div>
+    <p class="subtitle">Convenciones: <span class="tag red">Alta</span> <span class="tag yellow">Media</span> <span class="tag green">Baja</span> <span class="tag purple">Análisis</span> <span class="tag gray">Sin definir</span></p>
+    <div class="notice">Los cambios se guardan en el almacenamiento local de este navegador. Exporta periódicamente una copia de seguridad.</div>
+  </div>
+</section>
+
+<section id="matriz" class="hidden">
+  <div class="panel">
+    <h2>Buscar y filtrar información</h2>
+    <div class="filters">
+      <div class="field"><label>Buscar</label><input id="buscar" placeholder="Sistema, necesidad, responsable..." oninput="dibujar()"></div>
+      <div class="field"><label>Dirección</label><select id="fdir" onchange="dibujar()"><option value="">Todas</option></select></div>
+      <div class="field"><label>Prioridad</label><select id="fpri" onchange="dibujar()"><option value="">Todas</option><option>Priorizada</option><option>Sin definir</option></select></div>
+      <div class="field"><label>Estado</label><select id="fest" onchange="dibujar()"><option value="">Todos</option></select></div>
+      <div class="field"><label>Acción</label><select id="facc" onchange="dibujar()"><option value="">Todas</option></select></div>
+      <div class="field"><label>Etapa</label><select id="fetapa" onchange="dibujar()"><option value="">Todas</option></select></div>
+      <button class="btn" onclick="limpiar()">Limpiar filtros</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Matriz de necesidades <span id="cantidad" class="subtitle"></span></h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>ID</th><th>Dirección</th><th>Sistema / información</th><th>Necesidad</th><th>Prioridad</th><th>Acción</th><th>Responsable</th><th>Estado</th><th>Etapa</th><th>Acciones</th></tr></thead>
+      <tbody id="filas"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="indicadores" class="hidden">
+  <div class="panel">
+    <h2>Necesidades por Dirección</h2><div id="grafDir"></div>
+  </div>
+  <div class="panel">
+    <h2>Distribución por estado</h2><div id="grafEstado"></div>
+  </div>
+  <div class="panel">
+    <h2>Distribución por acción</h2><div id="grafAccion"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<div class="modal" id="modal">
+<div class="modalbox">
+  <div class="modalhead"><h2 id="formtitulo">Nueva necesidad</h2><button class="btn" onclick="cerrar()">✕</button></div>
+  <form onsubmit="guardar(event)">
+  <div class="modalbody">
+    <div class="notice">Completa los campos obligatorios. Usa las listas para mantener consistencia en los datos.</div>
+    <div class="formgrid">
+      <div class="field"><label>Dirección / Subsecretaría *</label><input id="direccion" required></div>
+      <div class="field"><label>Información / sistema *</label><input id="sistema" required></div>
+      <div class="field full"><label>Descripción de la necesidad *</label><textarea id="necesidad" required></textarea></div>
+      <div class="field"><label>¿Priorizada?</label><select id="prioridad"><option value="false">Sin definir</option><option value="true">Priorizada</option></select></div>
+      <div class="field"><label>Nivel de prioridad</label><select id="nivel"><option value="">Sin definir</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+      <div class="field"><label>Acción</label><select id="accion"></select></div>
+      <div class="field"><label>Responsable / Apoya</label><input id="responsable"></div>
+      <div class="field"><label>Estado</label><select id="estado"></select></div>
+      <div class="field"><label>Etapa</label><select id="etapa"></select></div>
+      <div class="field"><label>Fecha de registro</label><input id="fecha" type="date"></div>
+      <div class="field"><label>Fecha de actualización</label><input id="actualizacion" type="date"></div>
+      <div class="field full"><label>Observaciones / seguimiento</label><textarea id="observaciones"></textarea></div>
+    </div>
+  </div>
+  <div class="modalfoot"><button type="button" class="btn" onclick="cerrar()">Cancelar</button><button class="btn primary" type="submit">Guardar registro</button></div>
+  </form>
+</div>
+</div>
+
+<script>
+// La matriz comienza vacía. Importa los datos de tu archivo CSV.
+const matrizOriginal = [];
+let datos = JSON.parse(localStorage.getItem("matrizSI") || "null") || matrizOriginal;
+let editando = null;
+
+const acciones = [
+ "Migrar","Contratar solución existente","Solicitud cerrada",
+ "Desarrollar SSSA/Contratar","Desarrollar SSSA",
+ "Rediseñar/Migrar","Pendiente de definición"
+];
+const estados = [
+ "Nueva","En análisis","Priorizada","En documentación",
+ "En desarrollo","En contratación","En seguimiento",
+ "Pendiente de información","Solicitud cerrada","Descartada","Finalizada"
+];
+const etapas = ["Etapa 1","Etapa 2","Etapa 3","Próxima etapa","Sin etapa definida","Finalizada"];
+
+const $ = id => document.getElementById(id);
+const normalizar = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const escapar = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persistir(){localStorage.setItem("matrizSI",JSON.stringify(datos))}
+function opciones(id,lista,actual=""){
+  $(id).innerHTML='<option value="">Sin definir</option>'+lista.map(x=>`<option>${escapar(x)}</option>`).join("");
+  $(id).value=actual;
+}
+function pagina(id,boton){
+  ["inicio","matriz","indicadores"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
+  $("titulo").textContent={inicio:"Panel de control",matriz:"Matriz de necesidades",indicadores:"Indicadores ejecutivos"}[id];
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(boton)boton.classList.add("active");
+  if(id==="matriz"){filtros();dibujar()}
+  if(id==="indicadores")graficos();
+  kpis();
+}
+function kpis(){
+  $("total").textContent=datos.length;
+  $("priorizadas").textContent=datos.filter(x=>x.priorizada).length;
+  $("desarrollo").textContent=datos.filter(x=>normalizar(x.estado).includes("desarrollo")||normalizar(x.accion).includes("desarroll")).length;
+  $("pendientes").textContent=datos.filter(x=>!x.estado).length;
+}
+function filtros(){
+  const configurar=(id,lista,primero)=>{
+    const anterior=$(id).value;
+    $(id).innerHTML=`<option value="">${primero}</option>`+[...new Set(lista.filter(Boolean))].sort().map(x=>`<option>${escapar(x)}</option>`).join("");
+    $(id).value=anterior;
+  };
+  configurar("fdir",datos.map(x=>x.direccion),"Todas");
+  configurar("fest",datos.map(x=>x.estado),"Todos");
+  configurar("facc",datos.map(x=>x.accion),"Todas");
+  configurar("fetapa",datos.map(x=>x.etapa),"Todas");
+}
+function filtrados(){
+  const q=normalizar($("buscar").value);
+  return datos.filter(x=>{
+    const texto=normalizar(Object.values(x).join(" "));
+    return (!q||texto.includes(q)) &&
+      (!$("fdir").value||x.direccion===$("fdir").value) &&
+      (!$("fpri").value||($("fpri").value==="Priorizada"?x.priorizada:!x.priorizada)) &&
+      (!$("fest").value||x.estado===$("fest").value) &&
+      (!$("facc").value||x.accion===$("facc").value) &&
+      (!$("fetapa").value||x.etapa===$("fetapa").value);
+  });
+}
+function etiquetaEstado(s){
+  if(!s)return '<span class="tag gray">Sin estado</span>';
+  const n=normalizar(s);
+  const c=n.includes("cerrad")||n.includes("descart")?"red":
+    n.includes("finaliz")||n.includes("desarrollo")?"green":
+    n.includes("pend")||n.includes("contrat")?"yellow":
+    n.includes("analisis")||n.includes("prioriz")?"purple":"blue";
+  return `<span class="tag ${c}">${escapar(s)}</span>`;
+}
+function dibujar(){
+  const lista=filtrados();
+  $("cantidad").textContent=`(${lista.length} de ${datos.length})`;
+  $("filas").innerHTML=lista.length?lista.map(x=>`
+    <tr>
+      <td><b>#${escapar(x.id)}</b></td>
+      <td>${escapar(x.direccion)}</td>
+      <td>${escapar(x.sistema)}</td>
+      <td title="${escapar(x.necesidad)}">${escapar((x.necesidad||"").slice(0,120))}${(x.necesidad||"").length>120?"…":""}</td>
+      <td>${x.priorizada?'<span class="tag red">Priorizada</span>':'<span class="tag gray">Sin definir</span>'}</td>
+      <td>${escapar(x.accion)}</td><td>${escapar(x.responsable)}</td>
+      <td>${etiquetaEstado(x.estado)}</td><td>${etiquetaEstado(x.etapa)}</td>
+      <td>
+        <button class="smallbtn" onclick="editar(${Number(x.id)})">✏️</button>
+        <button class="smallbtn" onclick="duplicar(${Number(x.id)})">📋</button>
+        <button class="smallbtn" onclick="eliminar(${Number(x.id)})">🗑️</button>
+      </td>
+    </tr>`).join(""):'<tr><td colspan="10" style="text-align:center;padding:30px">No hay registros. Importa un CSV o crea una necesidad.</td></tr>';
+}
+function limpiar(){
+  ["buscar","fdir","fpri","fest","facc","fetapa"].forEach(id=>$(id).value="");
+  dibujar();
+}
+function nuevo(){formulario(null)}
+function editar(id){formulario(datos.find(x=>Number(x.id)===id))}
+function formulario(x){
+  editando=x?Number(x.id):null;
+  $("formtitulo").textContent=x?"Editar necesidad":"Nueva necesidad";
+  opciones("accion",acciones,x?.accion||"");
+  opciones("estado",estados,x?.estado||"");
+  opciones("etapa",etapas,x?.etapa||"");
+  $("direccion").value=x?.direccion||"";
+  $("sistema").value=x?.sistema||"";
+  $("necesidad").value=x?.necesidad||"";
+  $("prioridad").value=String(!!x?.priorizada);
+  $("nivel").value=x?.nivel||"";
+  $("responsable").value=x?.responsable||"";
+  $("fecha").value=x?.fecha||new Date().toISOString().slice(0,10);
+  $("actualizacion").value=x?.actualizacion||new Date().toISOString().slice(0,10);
+  $("observaciones").value=x?.observaciones||"";
+  $("modal").classList.add("open");
+}
+function cerrar(){$("modal").classList.remove("open")}
+function guardar(e){
+  e.preventDefault();
+  const r={
+    id:editando??Math.max(0,...datos.map(x=>Number(x.id)||0))+1,
+    direccion:$("direccion").value.trim(),sistema:$("sistema").value.trim(),
+    necesidad:$("necesidad").value.trim(),priorizada:$("prioridad").value==="true",
+    nivel:$("nivel").value,accion:$("accion").value,responsable:$("responsable").value.trim(),
+    estado:$("estado").value,etapa:$("etapa").value,fecha:$("fecha").value,
+    actualizacion:$("actualizacion").value,observaciones:$("observaciones").value.trim()
+  };
+  datos=editando===null?[...datos,r]:datos.map(x=>Number(x.id)===editando?r:x);
+  persistir();cerrar();filtros();dibujar();kpis();
+}
+function duplicar(id){
+  const x=datos.find(x=>Number(x.id)===id);if(!x)return;
+  datos.push({...x,id:Math.max(0,...datos.map(x=>Number(x.id)||0))+1});
+  persistir();filtros();dibujar();kpis();
+}
+function eliminar(id){
+  if(!confirm("¿Deseas eliminar este registro?"))return;
+  datos=datos.filter(x=>Number(x.id)!==id);
+  persistir();filtros();dibujar();kpis();
+}
+function exportar(){
+  const encabezados=["ID","Dirección","Sistema","Necesidad","Priorizada","Nivel","Acción","Responsable","Estado","Etapa","Fecha","Actualización","Observaciones"];
+  const filas=datos.map(x=>[x.id,x.direccion,x.sistema,x.necesidad,x.priorizada?"Sí":"No",x.nivel,x.accion,x.responsable,x.estado,x.etapa,x.fecha,x.actualizacion,x.observaciones]);
+  const csv=[encabezados,...filas].map(f=>f.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Matriz_Sistemas_Informacion.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function importar(e){
+  const archivo=e.target.files[0];if(!archivo)return;
+  const lector=new FileReader();
+  lector.onload=ev=>{
+    const lineas=ev.target.result.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);
+    if(lineas.length<2){alert("El CSV no contiene registros.");return}
+    const parse=linea=>linea.split(";").map(v=>v.replace(/^"|"$/g,"").replace(/""/g,'"'));
+    const cab=parse(lineas[0]).map(normalizar);
+    const indice=(...nombres)=>cab.findIndex(c=>nombres.map(normalizar).includes(c));
+    const i={
+      id:indice("id"),dir:indice("dirección","direccion","dirección/subsecretaría"),
+      sis:indice("sistema","información","informacion"),nec:indice("necesidad"),
+      pri:indice("priorizada"),accion:indice("acción","accion"),resp:indice("responsable","apoya"),
+      estado:indice("estado"),etapa:indice("etapa"),fecha:indice("fecha","fecha registro"),
+      act:indice("actualización","fecha actualización"),obs:indice("observaciones")
+    };
+    const nuevoDato=lineas.slice(1).map((l,n)=>{
+      const c=parse(l),get=k=>i[k]>=0?(c[i[k]]||""):"";
+      return {id:Number(get("id"))||n+1,direccion:get("dir"),sistema:get("sis"),necesidad:get("nec"),
+        priorizada:/^(si|sí|1|true)$/i.test(get("pri")),nivel:"",accion:get("accion"),
+        responsable:get("resp"),estado:get("estado"),etapa:get("etapa"),
+        fecha:get("fecha"),actualizacion:get("act"),observaciones:get("obs")};
+    }).filter(x=>x.direccion||x.sistema||x.necesidad);
+    if(!confirm(`Se encontraron ${nuevoDato.length} registros. ¿Reemplazar la matriz actual?`))return;
+    datos=nuevoDato;persistir();filtros();dibujar();kpis();alert("Importación terminada.");
+  };
+  lector.readAsText(archivo,"UTF-8");e.target.value="";
+}
+function graficos(){
+  const pintar=(id,lista)=>{
+    const pares=Object.entries(lista).sort((a,b)=>b[1]-a[1]),max=Math.max(1,...pares.map(x=>x[1]));
+    $(id).innerHTML=pares.length?pares.map(([n,v])=>`<div class="chartrow"><span>${escapar(n)}</span><div class="bar"><span style="width:${v/max*100}%"></span></div><b>${v}</b></div>`).join(""):"Sin información";
+  };
+  const contar=fn=>datos.reduce((a,x)=>{let k=fn(x)||"Sin definir";a[k]=(a[k]||0)+1;return a},{});
+  pintar("grafDir",contar(x=>x.direccion));
+  pintar("grafEstado",contar(x=>x.estado));
+  pintar("grafAccion",contar(x=>x.accion));
+}
+kpis();
+</script>
+</body>
+</html>
